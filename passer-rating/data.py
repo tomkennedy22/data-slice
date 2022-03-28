@@ -182,8 +182,8 @@ def scrape_season_page(season_url_template, data_capsule, season):
         #print(cells_by_data_stat)
 
 
-def scrape_game_page():
-    url = eval_template(template = game_url_template, key_val = {'game_href': game_href})
+def scrape_game_page(game, data_capsule):
+    url = eval_template(template = game_url_template, key_val = {'game_href': game.game_href})
     source = requests.get(url)
     soup = BeautifulSoup(source.content,'html.parser')
 
@@ -193,10 +193,13 @@ def scrape_game_page():
         for tr in soup.select(f'#{stat_table_id} tbody tr:not(.thead)'):
             cells = tr.find_all('td')
             cells += tr.find_all('th')
-            print(cells)
             cells_by_data_stat = {}
             for cell in cells:
-                cells_by_data_stat[cell['data-stat']] = cell
+                cells_by_data_stat[cell['data-stat']] = cell.text
+
+            
+
+            print(cells_by_data_stat)
 
 
 for year in range(2021, 2021 + 1):
