@@ -8,7 +8,9 @@ data_capsule = {
     'seasons': {},
     'weeks': {},
     'teams': {},
-    'games': {}
+    'games': {},
+    'players': {},
+    'player_games': {}
 }
 
 class Season:
@@ -87,8 +89,10 @@ class Team_Season:
 
 class Player_Game:
 
-    def __init__(self):
-        return None
+    def __init__(self, player, game):
+        self.player = player
+        self.game = game
+
 
 class Player_Season:
 
@@ -126,6 +130,19 @@ def decode_game_id_from_href(game_href):
     #   '/boxscores/202201170ram.htm' -> ['', 'boxscores', '202201170ram', 'htm']
 
     return href_split[2]
+
+def decode_player_id_from_href(player_href):
+    #Take href from player <a> element and return player id
+    #   '/players/E/EkelAu00.htm' -> 'EkelAu00' for Austin Ekeler
+
+    player_href = player_href.replace('.', '/')
+    href_split = player_href.split('/')
+    #   '/players/E/EkelAu00.htm' -> ['', 'players', 'E', 'EkelAu00', 'htm']
+
+    return href_split[3]
+
+def generate_player_game_id(player, game):
+    return f'{player.id}-{game.id}'
 
 
 def scrape_season_page(season_url_template, data_capsule, season):
@@ -196,6 +213,29 @@ def scrape_game_page(game, data_capsule):
             cells_by_data_stat = {}
             for cell in cells:
                 cells_by_data_stat[cell['data-stat']] = cell.text
+
+            player_cell = cells[0]
+            player_anchor = player_cell.find('a')
+            player_href = player_anchor['href']
+            player_id = decode_player_id_from_href(player_href)
+            player_name = cells_by_data_stat['player']
+
+            player = data_capsule['players'].get(player_id)
+            if not player:
+                player = Player(player_id = player_id, player_href = player_href, player_name = player_name)
+                data_capsule['players'][player_id] = player
+
+
+            player_game_id = generate_player_game_id(player = player, game = game)
+
+            player_game = data_capsule['player_games'].get(player_game_id)
+            if not player_game:
+                player_game = Player_Game(player = player, game = game)
+                data_capsule['player_games'][player_game_id] = player_game
+
+            player_game.add_stats(cells_by_data_stat)
+
+            
 
             
 
